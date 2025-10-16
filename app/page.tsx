@@ -5,7 +5,7 @@ import WalletGenerator from "@/components/WalletGenerator";
 import { useState } from "react";
 export default function Home() {
 
-  const [walletSelected,setWalletSelected] = useState<String>("");
+  const [walletSelected,setWalletSelected] = useState<string>("");
   return (
     <div>
       <Header />
@@ -15,12 +15,13 @@ export default function Home() {
         <span className="text-4xl">Vault suports multiple blockchains</span>
         <span className="text-xl font-semibold  text-neutral-400">Choose a blockchain to get started</span>
         <div className="flex gap-4 my-3">
-          <Button onClick={()=>{setWalletSelected('Solana')}} label="Solana" variant="dark"/>
-          <Button onClick={()=>{setWalletSelected('Etherium')}} label="Etherium" variant="light"/>
+          <Button onClick={()=>{setWalletSelected('501')}} label="Solana" variant="dark"/>
+          <Button onClick={()=>{setWalletSelected('60')}} label="Ethereum" variant="light"/>
         </div>
       </div>
         
-         :<WalletGenerator/>
+         :
+         <WalletGenerator walletSelected={walletSelected}  />
       }
     </div>
   );
