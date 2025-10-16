@@ -6,6 +6,7 @@ import { derivePath } from "ed25519-hd-key";
 import React, { useEffect, useState } from "react";
 import bs58 from "bs58";
 import nacl from "tweetnacl";
+import Button from "./Button";
 interface Wallet {
   pubKey: string;
   privateKey: string;
@@ -17,6 +18,7 @@ const WalletGenerator = () => {
   const [mnemonicsWords, setMnemonicsWords] = useState<string[]>(
     Array(12).fill(" ")
   );
+   const [mneomicsInput, setMenomicsInput] = useState<string>("")
   const [wallets, setWallets] = useState<Wallet[]>([]);
 
   const generateWalletfromMneomics = (
@@ -106,8 +108,17 @@ const WalletGenerator = () => {
     //   </div>
     // </div>
     <div>
-      <div className="">
-        <span>Secret Recovery Phase</span>
+      <div className="m-20 flex flex-col">
+        <span className="text-4xl font-bold tracking-tight ">Secret Recovery Phase</span>
+        <span className="text-md text-neutral-600 font-bold tracking-wide ">Save these words in a safe place</span>
+        <div className="flex gap-2 items-center mt-3">
+          <input onChange={(e)=>setMenomicsInput(e.target.value)} value={mneomicsInput} className="outline-1 outline-neutral-200 py-2 text-sm px-3 w-310 rounded-sm focus:outline-2 focus:outline-black " placeholder="Enter your secret phrase (or leave blank to generate)" type="password" />
+          {mneomicsInput ?
+          <Button variant="dark" onClick={()=>{}} label="Add Wallet"/>
+          :
+          <Button variant="dark" onClick={()=>{}} label="Generate Wallet"/>
+          }
+        </div>
       </div>
     </div>
   );
