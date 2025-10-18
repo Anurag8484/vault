@@ -24,7 +24,7 @@ export default function Button({
           }
               ${
             variant === "danger"
-              ? "bg-red-600 text-white hover:bg-red-800" : ""
+              ? "bg-red-500 text-white hover:bg-red-700 duration-150" : ""
           }
           `}
             

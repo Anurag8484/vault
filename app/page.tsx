@@ -15,15 +15,29 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 import React, { useEffect, useState } from "react";
 import bs58 from "bs58";
 import nacl from "tweetnacl";
 import { ethers } from "ethers";
 import copy from "copy-to-clipboard";
-import { Copy, EyeClosed, EyeIcon, EyeOffIcon } from "lucide-react";
+import { CheckCheck, CheckCheckIcon, CircleCheckBigIcon, Copy, EyeClosed, EyeIcon, EyeOffIcon } from "lucide-react";
 import Button from "@/components/Button";
 import Header from "@/components/Header";
+import { Button as btn } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 interface Wallet {
   publicKey: string;
   privateKey: string;
@@ -194,6 +208,8 @@ export default function WalletGenerator() {
               onClick={() => {
                 setPath("501");
                 localStorage.setItem("path", "501");
+                toast("Solana wallet selected !");
+
               }}
               label="Solana"
               variant="dark"
@@ -202,6 +218,7 @@ export default function WalletGenerator() {
               onClick={() => {
                 setPath("60");
                 localStorage.setItem("path", "60");
+                toast('Ethereum wallet selected !')
               }}
               label="Ethereum"
               variant="light"
@@ -214,7 +231,15 @@ export default function WalletGenerator() {
             <div className="flex flex-col ">
               <div
                 className="m-20 flex flex-col  cursor-pointer gap-10 outline-1 outline-neutral-200 p-5 rounded-md"
-                onClick={() => copy(mnemonicsWords.join(" "))}
+                onClick={() => {
+                  copy(mnemonicsWords.join(" "));
+                  toast(
+                    <div className="flex items-center gap-1">
+                      <CircleCheckBigIcon className="size-4 text-green-700 font-bold" />
+                      Mneomics copied to clipboard!
+                    </div>
+                  );
+                }}
               >
                 <Accordion type="single" collapsible>
                   <AccordionItem value="item-1">
@@ -257,16 +282,41 @@ export default function WalletGenerator() {
                     variant="dark"
                     onClick={() => {
                       AddWalletFromMnemonics();
+                      toast(
+                        <div className="flex items-center gap-1">
+                          <CheckCheck className="size-4 text-green-700" />{" "}
+                          Wallet Added successfully!
+                        </div>
+                      );
+
                     }}
                     label="Add Wallet"
                   />
-                  <Button
-                    variant="danger"
-                    onClick={() => {
-                      handleClearWallets();
-                    }}
-                    label="Delete Wallets"
-                  />
+              
+                  <AlertDialog>
+                    <AlertDialogTrigger>
+                      <Button
+                        variant="danger"
+                        onClick={()=>{}}
+                        label="Delete Wallets"
+                      />
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Are you absolutely sure?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently
+                          delete all your wallets.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={()=>handleClearWallets()}>Continue</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
               {wallets.map((w, i) => (
@@ -287,7 +337,18 @@ export default function WalletGenerator() {
                       <span className="text-xl font-semibold text-neutral-600">
                         Public Key:
                       </span>
-                      <p className="text-primary/80 font-medium cursor-pointer hover:text-primary transition-all duration-300 truncate">
+                      <p
+                        onClick={() => {
+                          copy(w.publicKey);
+                          toast(
+                            <div className="flex items-center gap-1">
+                              <CircleCheckBigIcon className="size-4 text-green-700 font-bold" />
+                              Public Key copied to clipboard!
+                            </div>
+                          );
+                        }}
+                        className="text-primary/80 font-medium cursor-pointer hover:text-primary transition-all duration-300 truncate"
+                      >
                         {w.publicKey}
                       </p>
                     </div>
@@ -300,7 +361,13 @@ export default function WalletGenerator() {
                           <p
                             onClick={() => {
                               copy(w.privateKey);
-                              alert("copied");
+                              toast(
+                                <div className="flex items-center gap-1">
+                                  {" "}
+                                  <CircleCheckBigIcon className="size-4 text-green-700 font-bold" />{" "}
+                                  Private Key copied to clipboard!{" "}
+                                </div>
+                              );
                             }}
                             className="text-primary/80 font-medium cursor-pointer hover:text-primary transition-all duration-300 truncate"
                           >
@@ -340,7 +407,7 @@ export default function WalletGenerator() {
                 <input
                   onChange={(e) => setMenomicsInput(e.target.value)}
                   value={mneomicsInput}
-                  className="outline-1 outline-neutral-200 py-2 text-sm px-3 w-310 rounded-sm focus:outline-2 focus:outline-black "
+                  className="outline-1 outline-neutral-200 py-2 text-sm px-3 min-w-40 w-230 max-w-250 rounded-sm focus:outline-2 focus:outline-black "
                   placeholder="Enter your secret phrase (or leave blank to generate)"
                   type="password"
                 />
@@ -349,14 +416,23 @@ export default function WalletGenerator() {
                     variant="dark"
                     onClick={() => {
                       AddWalletFromInputs();
+                      toast(
+                        <div className="flex items-center gap-1">
+                          <CheckCheck className="size-4 text-green-700" />{" "}
+                          Wallet Added successfully!
+                        </div>
+                      );
+
                     }}
                     label="Add Wallet"
+
                   />
                 ) : (
                   <Button
                     variant="dark"
                     onClick={() => {
                       handleGenerateWallet();
+                      toast(<div className="flex items-center gap-1"><CheckCheck className="size-4 text-green-700"/> Wallet generated successfully!</div>)
                     }}
                     label="Generate Wallet"
                   />
