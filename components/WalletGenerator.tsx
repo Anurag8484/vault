@@ -178,7 +178,9 @@ export default function WalletGenerator() {
                     Save these words in a safe place
                   </span>
                 </div>
+
                 <div className="grid grid-cols-4  gap-3 gap-x-20 ">
+                  
                   {mnemonicsWords.map((word, i) => (
                     <div
                       key={i}
@@ -231,7 +233,7 @@ export default function WalletGenerator() {
                         Private Key:
                       </span>
                       <span className="text-sm text-neutral-500 flex items-center gap-2 font-semibold">
-                        {w.privateKey}{" "}
+                        <input type="password" name="" id="" value={w.privateKey} />
                         <Copy
                           className="size-4"
                           onClick={() => copy(w.privateKey)}

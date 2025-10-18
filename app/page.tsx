@@ -8,14 +8,22 @@ import {
   validateMnemonic,
 } from "bip39";
 import { derivePath } from "ed25519-hd-key";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
 import React, { useEffect, useState } from "react";
 import bs58 from "bs58";
 import nacl from "tweetnacl";
 import { ethers } from "ethers";
 import copy from "copy-to-clipboard";
-import { Copy } from "lucide-react";
+import { Copy, EyeClosed, EyeIcon, EyeOffIcon } from "lucide-react";
 import Button from "@/components/Button";
 import Header from "@/components/Header";
+import { Badge } from "@/components/ui/badge";
 interface Wallet {
   publicKey: string;
   privateKey: string;
@@ -31,6 +39,7 @@ export default function WalletGenerator() {
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [pathTypes, setPathTypes] = useState<string[]>([]);
   const [path, setPath] = useState<string>();
+  const [showPrivateKey, setShowPrivateKey] = useState<boolean>(false);
 
   useEffect(() => {
     const storedWallets = localStorage.getItem("wallets");
@@ -39,11 +48,11 @@ export default function WalletGenerator() {
 
     if (storedWallets && storedMnemonics && walletSelected) {
       setMnemonicsWords(JSON.parse(storedMnemonics));
-       setWallets(JSON.parse(storedWallets));
+      setWallets(JSON.parse(storedWallets));
       setPath(walletSelected);
     }
-    console.log(mnemonicsWords)
-    console.log(wallets)
+    console.log(mnemonicsWords);
+    console.log(wallets);
   }, []);
 
   const pathTypeNames: { [key: string]: string } = {
@@ -52,14 +61,13 @@ export default function WalletGenerator() {
   };
   const pathTypeName = pathTypeNames[pathTypes[0]] || "";
 
-  const handleClearWallets = ()=>{
-    localStorage.removeItem('wallets');
-    localStorage.removeItem('mnemonics');
+  const handleClearWallets = () => {
+    localStorage.removeItem("wallets");
+    localStorage.removeItem("mnemonics");
     setWallets([]);
     setMnemonicsWords([]);
     setPath("");
-
-  }
+  };
   const generateWalletfromMneomics = (
     mnemonic: string,
     accountIndex: number,
@@ -68,7 +76,7 @@ export default function WalletGenerator() {
     try {
       const seedBuffer = mnemonicToSeedSync(mnemonic);
       const path = `m/44'/${pathType}'/0'/${accountIndex}'`;
-      console.log(path);
+      // console.log(path);
       const { key: derivedSeed } = derivePath(path, seedBuffer.toString("hex"));
       let publicKeyEncoded;
       let privateKeyEncoded;
@@ -78,6 +86,10 @@ export default function WalletGenerator() {
         const keypair = Keypair.fromSecretKey(secretKey);
         privateKeyEncoded = bs58.encode(secretKey);
         publicKeyEncoded = keypair.publicKey.toBase58();
+        const extrakey = bs58.encode(keypair.secretKey);
+        console.log(privateKeyEncoded);
+        console.log("-------");
+        console.log(extrakey);
       } else if (pathType === "60") {
         const privateKey = Buffer.from(derivedSeed).toString("hex");
         privateKeyEncoded = privateKey;
@@ -100,13 +112,32 @@ export default function WalletGenerator() {
     }
   };
 
-  const AddWallet = () => {
-    if (!mneomicsInput) {
+  const AddWalletFromMnemonics = () => {
+    if (!mnemonicsWords) {
+      console.log("Mnemonics are not there");
       return;
     }
-   const words = mneomicsInput.split(" ");
-    setMnemonicsWords(words)
-    console.log(mnemonicsWords)
+
+    const wallet = generateWalletfromMneomics(
+      mnemonicsWords.join(" "),
+      wallets.length,
+      path || "501"
+    );
+    if (wallet) {
+      const updatedWallets = [...wallets, wallet];
+      setWallets(updatedWallets);
+      localStorage.setItem("wallets", JSON.stringify(updatedWallets));
+    }
+  };
+
+  const AddWalletFromInputs = () => {
+    if (!mneomicsInput) {
+      console.log("No input in mnemonics");
+      return;
+    }
+    const words = mneomicsInput.split(" ");
+    setMnemonicsWords(words);
+    console.log(mnemonicsWords);
     const wallet = generateWalletfromMneomics(
       words.join(" "),
       wallets.length,
@@ -162,15 +193,15 @@ export default function WalletGenerator() {
             <Button
               onClick={() => {
                 setPath("501");
-                localStorage.setItem('path',"501")
+                localStorage.setItem("path", "501");
               }}
               label="Solana"
               variant="dark"
-              />
+            />
             <Button
               onClick={() => {
                 setPath("60");
-                localStorage.setItem('path',"60")
+                localStorage.setItem("path", "60");
               }}
               label="Ethereum"
               variant="light"
@@ -185,27 +216,35 @@ export default function WalletGenerator() {
                 className="m-20 flex flex-col  cursor-pointer gap-10 outline-1 outline-neutral-200 p-5 rounded-md"
                 onClick={() => copy(mnemonicsWords.join(" "))}
               >
-                <div className="flex flex-col">
-                  <span className="text-4xl font-bold tracking-tight  ">
-                    Secret Recovery Phase
-                  </span>
-                  <span className="text-md text-neutral-600 font-bold tracking-wide ">
-                    Save these words in a safe place
-                  </span>
-                </div>
-                <div className="grid grid-cols-4  gap-3 gap-x-20 ">
-                  {mnemonicsWords.map((word, i) => (
-                    <div
-                      key={i}
-                      className="outline-1 flex  py-3 px-2 rounded-md bg-neutral-50 outline-neutral-400"
-                    >
-                      {word}
-                    </div>
-                  ))}
-                  <span className="text-sm text-neutral-500 font-semibold">
-                    Click anywhere to copy
-                  </span>
-                </div>
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="item-1">
+                    <AccordionTrigger className="text-4xl m-0 font-bold tracking-tight hover:no-underline cursor-pointer">
+                      <div className="flex flex-col">
+                        Secret Recovery Phase
+                        <span className="text-sm text-neutral-600 font-bold tracking-wide ">
+                          Save these words in a safe place
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      {/* Yes. It adheres to the WAI-ARIA design pattern. */}
+                      <div className="grid grid-cols-4 p-5  gap-3 gap-x-15 ">
+                        {mnemonicsWords.map((word, i) => (
+                          <div
+                            key={i}
+                            className="outline-1 flex  py-3 px-2 rounded-md bg-neutral-50 outline-neutral-400"
+                          >
+                            {word}
+                          </div>
+                        ))}
+                        <div className="text-sm flex items-center gap-2 mt-3  text-neutral-500 font-semibold">
+                          <span>Click anywhere to copy</span>
+                          <Copy className="size-4" />
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </div>
               <div className="flex justify-between   gap-2 items-center mx-20">
                 <div>
@@ -217,7 +256,7 @@ export default function WalletGenerator() {
                   <Button
                     variant="dark"
                     onClick={() => {
-                      AddWallet();
+                      AddWalletFromMnemonics();
                     }}
                     label="Add Wallet"
                   />
@@ -231,7 +270,10 @@ export default function WalletGenerator() {
                 </div>
               </div>
               {wallets.map((w, i) => (
-                <div className="mx-20 my-3 flex flex-col  cursor-pointer gap-2 outline-1 outline-neutral-200  rounded-xl">
+                <div
+                  key={i}
+                  className="mx-20 my-3 flex flex-col  cursor-pointer gap-2 outline-1 outline-neutral-200  rounded-xl"
+                >
                   <div className="flex flex-col p-5">
                     <span className="text-3xl font-bold tracking-tight  ">
                       Wallet {i + 1}
@@ -243,27 +285,44 @@ export default function WalletGenerator() {
                   <div className="flex flex-col gap-10 bg-neutral-50 p-5 rounded-t-3xl  ">
                     <div className="flex flex-col">
                       <span className="text-xl font-semibold text-neutral-600">
-                        Private Key:
+                        Public Key:
                       </span>
-                      <span className="text-sm text-neutral-500 flex items-center gap-2 font-semibold">
-                        {w.privateKey}{" "}
-                        <Copy
-                          className="size-4"
-                          onClick={() => copy(w.privateKey)}
-                        />
-                      </span>
+                      <p className="text-primary/80 font-medium cursor-pointer hover:text-primary transition-all duration-300 truncate">
+                        {w.publicKey}
+                      </p>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xl font-semibold text-neutral-600">
-                        Public Key:
+                        Private Key:
                       </span>
-                      <span className="text-sm text-neutral-500 flex items-center gap-2 font-semibold">
-                        {w.publicKey}{" "}
-                        <Copy
-                          className="size-4"
-                          onClick={() => copy(w.publicKey)}
-                        />
-                      </span>
+                      <div className="font-semibold">
+                        <div className="flex justify-between">
+                          <p
+                            onClick={() => {
+                              copy(w.privateKey);
+                              alert("copied");
+                            }}
+                            className="text-primary/80 font-medium cursor-pointer hover:text-primary transition-all duration-300 truncate"
+                          >
+                            {showPrivateKey
+                              ? w.privateKey
+                              : "•••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••"}
+                          </p>
+                          <button className="text-neutral-600 cursor-pointer">
+                            {showPrivateKey ? (
+                              <EyeOffIcon
+                                className="size-5"
+                                onClick={() => setShowPrivateKey(false)}
+                              />
+                            ) : (
+                              <EyeIcon
+                                className="size-5"
+                                onClick={() => setShowPrivateKey(true)}
+                              />
+                            )}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -289,7 +348,7 @@ export default function WalletGenerator() {
                   <Button
                     variant="dark"
                     onClick={() => {
-                      AddWallet();
+                      AddWalletFromInputs();
                     }}
                     label="Add Wallet"
                   />
@@ -310,4 +369,3 @@ export default function WalletGenerator() {
     </div>
   );
 }
-
